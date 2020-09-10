@@ -17,11 +17,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     captchalabel.cpp \
+    captchamovablelabel.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
     captchalabel.h \
+    captchamovablelabel.h \
     mainwindow.h
 
 FORMS += \

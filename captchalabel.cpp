@@ -11,7 +11,7 @@ void CaptchaLabel::initView()
     // 初始化控件
     for (int i = 0; i < CAPTCHAR_COUNT; i++)
     {
-        charLabels[i] = new CaptcharMovableLabel(this);
+        charLabels[i] = new CaptchaMovableLabel(this);
         charLabels[i]->show();
     }
 }
@@ -53,6 +53,9 @@ void CaptchaLabel::refresh()
         label->setFont(font);
         label->adjustSize();
 
+        // 随机旋转
+
+
         // 生成随机位置（排除边缘）
         int left = leftest + wid * i / CAPTCHAR_COUNT;
         int right = leftest + wid * (i+1) / CAPTCHAR_COUNT - label->width();
@@ -73,9 +76,7 @@ void CaptchaLabel::refresh()
                 break;
             }
         }
-        QPalette pa(label->palette());
-        pa.setColor(QPalette::Foreground, color);
-        label->setPalette(pa);
+        label->setColor(color);
     }
 
     // 生成噪音点
@@ -120,9 +121,10 @@ void CaptchaLabel::paintEvent(QPaintEvent *)
     }
 }
 
-void CaptchaLabel::mousePressEvent(QMouseEvent *event)
+void CaptchaLabel::mouseReleaseEvent(QMouseEvent *event)
 {
-    refresh();
-    QWidget::mousePressEvent(event);
+    if (QRect(0,0,width(),height()).contains(event->pos()))
+        refresh();
+    QWidget::mouseReleaseEvent(event);
 }
 
