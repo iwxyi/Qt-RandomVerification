@@ -9,6 +9,7 @@
 class CaptchaLabel : public QWidget
 {
     Q_OBJECT
+    Q_PROPERTY(int refreshProgress READ getRefreshProgress WRITE setRefreshProgress)
 public:
     CaptchaLabel(QWidget* parent = nullptr);
 
@@ -17,6 +18,9 @@ public:
 
 private:
     void initView();
+    void setRefreshProgress(int g);
+    int getRefreshProgress();
+    bool isNoAni();
 
 protected:
     void paintEvent(QPaintEvent* ) override;
@@ -28,6 +32,9 @@ private:
     QList<QColor> pointColors; // 点的颜色
     QList<QLine> noiseLines; // 噪音线
     QList<QGradient> lineColors; // 线的渐变色
+
+    int refreshProgress = 100;
+    QList<QPoint> noisePoints2; // 新的位置
 };
 
 #endif // CAPTCHALABEL_H

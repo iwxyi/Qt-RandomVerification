@@ -18,6 +18,22 @@ void CaptchaLabel::initView()
         charLabels[i]->move(0, 0);
     }
 }
+
+void CaptchaLabel::setRefreshProgress(int g)
+{
+    this->refreshProgress = g;
+    update();
+}
+
+int CaptchaLabel::getRefreshProgress()
+{
+    return refreshProgress;
+}
+
+bool CaptchaLabel::isNoAni()
+{
+    return refreshProgress == 100;
+}
 void CaptchaLabel::refresh()
 {
     int width = this->width();
@@ -25,10 +41,10 @@ void CaptchaLabel::refresh()
     // 清空全部内容
     for (int i = 0; i < CAPTCHAR_COUNT; i++)
         charLabels[i]->hide();
-    noisePoints.clear();
-    pointColors.clear();
-    noiseLines.clear();
-    lineColors.clear();
+
+    refreshProgress = -1;
+    update();
+
     // 获取背景底色
     QPixmap rend(this->size());
     render(&rend);
@@ -93,15 +109,37 @@ void CaptchaLabel::refresh()
 
     // 生成噪音点
     int count = wid * hei / border; // 点的数量
-    while (count--)
+    if (noisePoints.size() == 0) // 第一次
     {
-        noisePoints.append(QPoint(qrand() % width, qrand() % height));
-        pointColors.append(QColor(qrand() % 255, qrand() % 255, qrand() % 255));
+        for (int i = 0; i < count; i++)
+        {
+            int x = qrand() % width;
+            int y = qrand() % height;
+            noisePoints.append(QPoint(x, y / 2));
+            noisePoints2.append(QPoint(x, y));
+            pointColors.append(QColor(qrand() % 255, qrand() % 255, qrand() % 255));
+        }
+    }
+    else
+    {
+        noisePoints = noisePoints2;
+        count = noisePoints.size();
+
+        noisePoints2.clear();
+        for (int i = 0; i < count; i++)
+        {
+            noisePoints2.append(QPoint(qrand() % width, qrand() % height));
+        }
     }
 
     // 生成噪音线
 
-    update();
+    QPropertyAnimation* ani = new QPropertyAnimation(this, "refreshProgress");
+    ani->setStartValue(0);
+    ani->setEndValue(100);
+    ani->setDuration(qrand() % (CAPTCHA_REFRESH_DURATION) + CAPTCHA_REFRESH_DURATION);
+    ani->start();
+    connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
 }
 
 /**
@@ -127,11 +165,32 @@ void CaptchaLabel::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
 
-    // 移动随机的点
-    for (int i = 0; i < noisePoints.size(); i++)
+    if (refreshProgress == -1) // 不画，可能需要获取背景颜色
+        return ;
+
+    if (isNoAni())
     {
+        // 显示随机的点
+        for (int i = 0; i < noisePoints2.size(); i++)
+        {
+            painter.setPen(pointColors.at(i));
+            painter.drawPoint(noisePoints2.at(i));
+        }
+        return ;
+    }
+
+    // 动画过程中的点的移动
+    double newProp = refreshProgress / 100.0;
+    double oldProp = 1.0 - newProp;
+    int count = qMin(noisePoints.size(), noisePoints2.size());
+    for (int i = 0; i < count; i++)
+    {
+        QPoint pt1 = noisePoints.at(i);
+        QPoint pt2 = noisePoints2.at(i);
+        QPoint pt( pt1.x() * oldProp + pt2.x() * newProp,
+                   pt1.y() * oldProp + pt2.y() * newProp );
         painter.setPen(pointColors.at(i));
-        painter.drawPoint(noisePoints.at(i));
+        painter.drawPoint(pt);
     }
 }
 

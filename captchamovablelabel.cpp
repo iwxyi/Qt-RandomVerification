@@ -66,12 +66,11 @@ void CaptchaMovableLabel::paintEvent(QPaintEvent *)
     QPainter painter(this);
     painter.setFont(this->font());
     painter.setRenderHint(QPainter::SmoothPixmapTransform);
-//    painter.drawRect(0, 0, width()-1, height()-1); // 绘制边框
 
     int w2 = width()/2, h2 = height()/2;
-    painter.translate(w2, h2); // 平移到中心才进行旋转
+    painter.translate(w2, h2); // 平移到中心，绕中心点旋转
 
-    if (isNoAni())
+    if (isNoAni()) // 不在动画中，直接绘制
     {
         painter.setPen(color);
         painter.rotate(angle);
@@ -79,25 +78,22 @@ void CaptchaMovableLabel::paintEvent(QPaintEvent *)
         return ;
     }
 
-    // 动画里面，比较复杂
+    // 动画里面，前后渐变替换
     double newProp = refreshProgress / 100.0;
     double oldProp = 1.0 - newProp;
 
-//    double a = prevAngle * oldProp + angle * newProp + 0.5;
+    double a = prevAngle * oldProp + angle * newProp + 0.5;
     painter.save();
-    painter.rotate(prevAngle);
+    painter.rotate(a);
 
     QColor c = prevColor;
-    c.setAlpha(c.alpha() * oldProp);
+    c.setAlpha(c.alpha() * oldProp); // 旧文字渐渐消失
     painter.setPen(c);
     painter.drawText(QRect(-w2,-h2,width(),height()), Qt::AlignCenter, prevCh);
-    painter.restore();
 
-    painter.save();
     c = this->color;
-    c.setAlpha(c.alpha() * newProp);
+    c.setAlpha(c.alpha() * newProp); // 新文字渐渐显示
     painter.setPen(c);
-    painter.rotate(angle);
     painter.drawText(QRect(-w2, -h2, width(), height()), Qt::AlignCenter, ch);
     painter.restore();
 }
