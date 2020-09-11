@@ -15,15 +15,17 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+INCLUDEPATH += random_verification
+
 SOURCES += \
-    captchalabel.cpp \
-    captchamovablelabel.cpp \
+    random_verification/captchalabel.cpp \
+    random_verification/captchamovablelabel.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
-    captchalabel.h \
-    captchamovablelabel.h \
+    random_verification/captchalabel.h \
+    random_verification/captchamovablelabel.h \
     mainwindow.h
 
 FORMS += \
