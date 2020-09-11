@@ -3,7 +3,10 @@
 CaptchaLabel::CaptchaLabel(QWidget *parent) : QWidget(parent)
 {
     initView();
-    refresh();
+    // 这里延迟，等待布局结束
+    QTimer::singleShot(0, [=]{
+        refresh();
+    });
 }
 
 void CaptchaLabel::initView()
@@ -12,7 +15,7 @@ void CaptchaLabel::initView()
     for (int i = 0; i < CAPTCHAR_COUNT; i++)
     {
         charLabels[i] = new CaptchaMovableLabel(this);
-        charLabels[i]->show();
+        charLabels[i]->move(0, 0);
     }
 }
 void CaptchaLabel::refresh()
@@ -21,7 +24,7 @@ void CaptchaLabel::refresh()
     int height = this->height();
     // 清空全部内容
     for (int i = 0; i < CAPTCHAR_COUNT; i++)
-        charLabels[i]->move(width, height);
+        charLabels[i]->hide();
     noisePoints.clear();
     pointColors.clear();
     noiseLines.clear();
@@ -42,26 +45,33 @@ void CaptchaLabel::refresh()
     {
         auto label = charLabels[i];
 
+        // 随机大小
+        QFont font;
+        font.setPointSize( qrand() % 8 + 22 );
+        label->setFont(font);
+
+        // 随机旋转
+        label->setAngle( qrand() % (CAPTCHA_CHAR_ANGLE_MAX*2) - CAPTCHA_CHAR_ANGLE_MAX);
+
         // 生成随机字符
         const QString pool = "QWERTYUIOPASDFGHJKLZXCVBNM";
         QChar rc = pool.at(qrand() % pool.size());
+        // 此时会调整大小，setText必须在setFont之后
         label->setText(rc);
-
-        // 随机大小
-        QFont font;
-        font.setPointSize( qrand() % 8 + 12 );
-        label->setFont(font);
-        label->adjustSize();
-
-        // 随机旋转
-
 
         // 生成随机位置（排除边缘）
         int left = leftest + wid * i / CAPTCHAR_COUNT;
         int right = leftest + wid * (i+1) / CAPTCHAR_COUNT - label->width();
         int x = qrand() % (right-left) + left;
         int y = qrand() % qMax(hei - label->height(), 1) + topest;
-        label->move(x, y);
+        label->show(); // 之前是hide状态
+        QPropertyAnimation * ani = new QPropertyAnimation(label, "pos");
+        ani->setStartValue(label->pos());
+        ani->setEndValue(QPoint(x, y));
+        ani->setDuration(qrand() % (CAPTCHA_REFRESH_DURATION/2) + CAPTCHA_REFRESH_DURATION/2);
+        ani->setEasingCurve(QEasingCurve::OutQuart);
+        ani->start();
+        connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
 
         // 生成随机颜色，且必须和背景颜色有区分度
         QColor color;
@@ -77,6 +87,8 @@ void CaptchaLabel::refresh()
             }
         }
         label->setColor(color);
+
+        label->startRefreshAnimation();
     }
 
     // 生成噪音点
@@ -88,6 +100,8 @@ void CaptchaLabel::refresh()
     }
 
     // 生成噪音线
+
+    update();
 }
 
 /**

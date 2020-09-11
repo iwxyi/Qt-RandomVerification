@@ -17,10 +17,10 @@
    <widget class="CaptchaLabel" name="widget" native="true">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>20</y>
-      <width>141</width>
-      <height>31</height>
+      <x>40</x>
+      <y>10</y>
+      <width>181</width>
+      <height>71</height>
      </rect>
     </property>
    </widget>
@@ -28,7 +28,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>70</y>
+      <y>90</y>
       <width>113</width>
       <height>20</height>
      </rect>
@@ -38,7 +38,7 @@
     <property name="geometry">
      <rect>
       <x>150</x>
-      <y>70</y>
+      <y>90</y>
       <width>75</width>
       <height>23</height>
      </rect>

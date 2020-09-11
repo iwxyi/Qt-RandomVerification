@@ -2,6 +2,7 @@
 #define CAPTCHALABEL_H
 
 #include "captchamovablelabel.h"
+#include <QTimer>
 
 #define CAPTCHAR_COUNT 4 // 验证码字符数量
 
