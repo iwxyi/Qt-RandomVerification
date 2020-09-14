@@ -6,6 +6,10 @@ CaptchaMovableLabel::CaptchaMovableLabel(QWidget *parent) : QLabel(parent)
     effect.setOffset(0, 0);
 //    effect.setBlurRadius(8);
     setGraphicsEffect(&effect);
+
+    movingTimer.setInterval(30);
+    movingTimer.setSingleShot(false);
+    connect(&movingTimer, SIGNAL(timeout()), this, SLOT(slotMovePos()));
 }
 
 void CaptchaMovableLabel::setAngle(int angle)
@@ -18,6 +22,11 @@ void CaptchaMovableLabel::setColor(QColor color)
 {
     this->prevColor = this->color;
     this->color = color;
+
+    moveR = qrand() % 5;
+    moveG = qrand() % 5;
+    moveB = qrand() % 5;
+    movingTimer.start();
 }
 
 void CaptchaMovableLabel::setText(QString text)
@@ -55,6 +64,7 @@ void CaptchaMovableLabel::startRefreshAnimation()
     ani->setDuration(qrand() % (CAPTCHA_REFRESH_DURATION / 3) + CAPTCHA_REFRESH_DURATION / 3);
     ani->start();
     connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
+    connect(ani, SIGNAL(finished()), &movingTimer, SLOT(start()));
 }
 
 QString CaptchaMovableLabel::text()
@@ -108,6 +118,7 @@ void CaptchaMovableLabel::mousePressEvent(QMouseEvent *ev)
         dragging = true;
         moved = false;
         this->raise();
+        movingTimer.stop();
 
         startPressAnimation(200);
 
@@ -138,6 +149,7 @@ void CaptchaMovableLabel::mouseReleaseEvent(QMouseEvent *ev)
     {
         // 结束拖拽
         dragging = false;
+        movingTimer.start();
 
         startPressAnimation(0);
     }
@@ -183,4 +195,49 @@ void CaptchaMovableLabel::setPressProgress(int g)
 int CaptchaMovableLabel::getPressProgress()
 {
     return pressProgress;
+}
+
+void CaptchaMovableLabel::slotMovePos()
+{
+    if (refreshProgress < 100)
+        return ;
+
+    int val = color.red() + moveR;
+    if ( val > 255)
+    {
+        val = 255;
+        moveR = - qrand() % 5;
+    }
+    else if (val < 0)
+    {
+        val = 0;
+        moveR = - qrand() % 5;
+    }
+    color.setRed(val);
+
+    val = color.green() + moveG;
+    if ( val > 255)
+    {
+        val = 255;
+        moveG = - qrand() % 5;
+    }
+    else if (val < 0)
+    {
+        val = 0;
+        moveG = - qrand() % 5;
+    }
+    color.setGreen(val);
+
+    val = color.blue() + moveB;
+    if ( val > 255)
+    {
+        val = 255;
+        moveB = - qrand() % 5;
+    }
+    else if (val < 0)
+    {
+        val = 0;
+        moveB = - qrand() % 5;
+    }
+    color.setBlue(val);
 }

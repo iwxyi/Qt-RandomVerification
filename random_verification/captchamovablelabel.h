@@ -11,6 +11,7 @@
 #include <QApplication>
 #include <QGraphicsDropShadowEffect>
 #include <cmath>
+#include <QTimer>
 
 #define CAPTCHA_REFRESH_DURATION 300 // 刷新的动画时长
 #define CAPTCHA_CHAR_ANGLE_MAX 20 // 最大旋转角：20°
@@ -28,6 +29,7 @@ public:
     void setColor(QColor color);
     void setText(QString ch);
     void startRefreshAnimation();
+    void setMoveBorder(QRect rect);
 
     QString text();
 
@@ -44,6 +46,9 @@ private:
     inline bool isNoAni();
     void setPressProgress(int g);
     int getPressProgress();
+
+private slots:
+    void slotMovePos();
 
 private:
     QPoint press_pos;
@@ -64,6 +69,8 @@ private:
     int pressProgress = 0;
 
     bool inited = false;
+    QTimer movingTimer;
+    int moveR, moveG, moveB;
 };
 
 #endif // CAPTCHAMOVABLELABEL_H

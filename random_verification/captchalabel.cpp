@@ -33,7 +33,7 @@ void CaptchaLabel::initData()
         return QColor(qrand() % 255, qrand() % 255, qrand() % 255);
     };
     int w = width(), h = height();
-    int count = w * h / 200;
+    int count = w * h / 400;
     int penW = qMin(w, h) / 15;
     for (int i = 0; i < count; i++)
     {
