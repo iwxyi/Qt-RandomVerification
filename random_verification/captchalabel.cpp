@@ -5,6 +5,7 @@ CaptchaLabel::CaptchaLabel(QWidget *parent) : QWidget(parent)
     initView();
     // 这里延迟，等待布局结束
     QTimer::singleShot(0, [=]{
+        initData();
         refresh();
     });
 }
@@ -16,6 +17,33 @@ void CaptchaLabel::initView()
     {
         charLabels[i] = new CaptchaMovableLabel(this);
         charLabels[i]->move(0, 0);
+    }
+
+    // 初始化时钟
+    movingTimer.setInterval(30);
+    movingTimer.setSingleShot(false);
+    movingTimer.start();
+    connect(&movingTimer, SIGNAL(timeout()), this, SLOT(moveNoiseLines()));
+}
+
+void CaptchaLabel::initData()
+{
+    // 初始化噪音线
+    auto getRandomColor = [=]{
+        return QColor(qrand() % 255, qrand() % 255, qrand() % 255);
+    };
+    int w = width(), h = height();
+    int count = w * h / 200;
+    int penW = qMin(w, h) / 20;
+    for (int i = 0; i < count; i++)
+    {
+        lineStarts.append(QPointF(qrand() % w, qrand() % h));
+        lineEnds.append(QPointF(qrand() % w, qrand() % h));
+        startsV.append(QPointF((qrand() % 30 - 15) / 10.0, (qrand() % 30 - 15) / 10.0));
+        endsV.append(QPointF((qrand() % 30 - 15) / 10.0, (qrand() % 30 - 15) / 10.0));
+        lineWidths.append(qrand() % penW + 1);
+        lineColor1s.append(getRandomColor());
+        lineColor2s.append(getRandomColor());
     }
 }
 
@@ -33,6 +61,43 @@ int CaptchaLabel::getRefreshProgress()
 bool CaptchaLabel::isNoAni()
 {
     return refreshProgress == 100;
+}
+
+void CaptchaLabel::moveNoiseLines()
+{
+    int w = width(), h = height();
+    double vBase = 100.0; // 大概最快要3秒钟走完
+
+    for (int i = 0; i < lineStarts.size(); i++)
+    {
+        QPointF& pos = lineStarts[i];
+        pos += startsV.at(i);
+        if (pos.x() < 0)
+            startsV[i].setX(qrand() % w / vBase);
+        else if (pos.x() > w)
+            startsV[i].setX(- qrand() % w / vBase);
+        if (pos.y() < 0)
+            startsV[i].setY(qrand() % h / vBase);
+        else if (pos.y() > h)
+            startsV[i].setY(- qrand() % h / vBase);
+    }
+
+
+    for (int i = 0; i < lineEnds.size(); i++)
+    {
+        QPointF& pos = lineEnds[i];
+        pos += endsV.at(i);
+        if (pos.x() < 0)
+            endsV[i].setX(qrand() % w / vBase);
+        else if (pos.x() > w)
+            endsV[i].setX(- qrand() % w / vBase);
+        if (pos.y() < 0)
+            endsV[i].setY(qrand() % h / vBase);
+        else if (pos.y() > h)
+            endsV[i].setY(- qrand() % h / vBase);
+    }
+
+    update();
 }
 void CaptchaLabel::refresh()
 {
@@ -168,6 +233,7 @@ void CaptchaLabel::paintEvent(QPaintEvent *)
     if (refreshProgress == -1) // 不画，可能需要获取背景颜色
         return ;
 
+    // 画噪音点
     if (isNoAni())
     {
         // 显示随机的点
@@ -176,21 +242,33 @@ void CaptchaLabel::paintEvent(QPaintEvent *)
             painter.setPen(pointColors.at(i));
             painter.drawPoint(noisePoints2.at(i));
         }
-        return ;
+    }
+    else
+    {
+        // 动画过程中的点的移动
+        double newProp = refreshProgress / 100.0;
+        double oldProp = 1.0 - newProp;
+        int count = qMin(noisePoints.size(), noisePoints2.size());
+        for (int i = 0; i < count; i++)
+        {
+            QPoint pt1 = noisePoints.at(i);
+            QPoint pt2 = noisePoints2.at(i);
+            QPoint pt( pt1.x() * oldProp + pt2.x() * newProp,
+                       pt1.y() * oldProp + pt2.y() * newProp );
+            painter.setPen(pointColors.at(i));
+            painter.drawPoint(pt);
+        }
     }
 
-    // 动画过程中的点的移动
-    double newProp = refreshProgress / 100.0;
-    double oldProp = 1.0 - newProp;
-    int count = qMin(noisePoints.size(), noisePoints2.size());
-    for (int i = 0; i < count; i++)
+    // 画噪音线
+    painter.setRenderHint(QPainter::Antialiasing);
+    for (int i = 0; i < lineStarts.size(); i++)
     {
-        QPoint pt1 = noisePoints.at(i);
-        QPoint pt2 = noisePoints2.at(i);
-        QPoint pt( pt1.x() * oldProp + pt2.x() * newProp,
-                   pt1.y() * oldProp + pt2.y() * newProp );
-        painter.setPen(pointColors.at(i));
-        painter.drawPoint(pt);
+        QLinearGradient grad(lineStarts.at(i), lineEnds.at(i));
+        grad.setColorAt(0, lineColor1s.at(i));
+        grad.setColorAt(1, lineColor2s.at(i));
+        painter.setPen(QPen(grad, lineWidths.at(i)));
+        painter.drawLine(lineStarts.at(i), lineEnds.at(i));
     }
 }
 
