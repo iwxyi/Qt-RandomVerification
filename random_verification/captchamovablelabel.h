@@ -14,11 +14,13 @@
 
 #define CAPTCHA_REFRESH_DURATION 300 // 刷新的动画时长
 #define CAPTCHA_CHAR_ANGLE_MAX 20 // 最大旋转角：20°
+#define CAPTCHA_SHADOW_BLUR_MAX 80 // 最大的阴影模糊半径
 
 class CaptchaMovableLabel : public QLabel
 {
     Q_OBJECT
     Q_PROPERTY(int refreshProgress READ getRefreshProgress WRITE setRefreshProgress)
+    Q_PROPERTY(int pressProgress READ getPressProgress WRITE setPressProgress)
 public:
     CaptchaMovableLabel(QWidget* parent);
 
@@ -36,10 +38,12 @@ protected:
     void mouseReleaseEvent(QMouseEvent *ev) override;
 
 private:
-    void startPressAnimation(int start, int end);
+    void startPressAnimation(int end);
     void setRefreshProgress(int g);
     int getRefreshProgress();
     inline bool isNoAni();
+    void setPressProgress(int g);
+    int getPressProgress();
 
 private:
     QPoint press_pos;
@@ -56,6 +60,8 @@ private:
     QColor prevColor;
     int prevAngle = 0;
     QString prevChar;
+
+    int pressProgress = 0;
 
     bool inited = false;
 };

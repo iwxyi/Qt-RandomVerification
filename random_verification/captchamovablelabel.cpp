@@ -4,6 +4,7 @@
 CaptchaMovableLabel::CaptchaMovableLabel(QWidget *parent) : QLabel(parent)
 {
     effect.setOffset(0, 0);
+//    effect.setBlurRadius(8);
     setGraphicsEffect(&effect);
 }
 
@@ -106,9 +107,10 @@ void CaptchaMovableLabel::mousePressEvent(QMouseEvent *ev)
         press_pos = ev->pos();
         dragging = true;
         moved = false;
-        effect.setOffset(-2, 2);
-        effect.setBlurRadius(8);
         this->raise();
+
+        startPressAnimation(200);
+
         return ev->accept();
     }
     QLabel::mousePressEvent(ev);
@@ -136,17 +138,22 @@ void CaptchaMovableLabel::mouseReleaseEvent(QMouseEvent *ev)
     {
         // 结束拖拽
         dragging = false;
-        effect.setOffset(0, 0);
-        effect.setBlurRadius(0);
+
+        startPressAnimation(0);
     }
     if (moved)
         return ev->accept();
     QLabel::mouseReleaseEvent(ev);
 }
 
-void CaptchaMovableLabel::startPressAnimation(int start, int end)
+void CaptchaMovableLabel::startPressAnimation(int end)
 {
-
+    QPropertyAnimation* ani = new QPropertyAnimation(this, "pressProgress");
+    ani->setStartValue(pressProgress);
+    ani->setEndValue(end);
+    ani->setDuration(CAPTCHA_REFRESH_DURATION << 1);
+    ani->start();
+    connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
 }
 
 void CaptchaMovableLabel::setRefreshProgress(int g)
@@ -163,4 +170,17 @@ int CaptchaMovableLabel::getRefreshProgress()
 bool CaptchaMovableLabel::isNoAni()
 {
     return refreshProgress == 100;
+}
+
+void CaptchaMovableLabel::setPressProgress(int g)
+{
+    this->pressProgress = g;
+    double off = g / 100;
+    effect.setBlurRadius(g / 20.0);
+    effect.setOffset(-off, off);
+}
+
+int CaptchaMovableLabel::getPressProgress()
+{
+    return pressProgress;
 }
