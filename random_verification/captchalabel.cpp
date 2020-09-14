@@ -34,7 +34,7 @@ void CaptchaLabel::initData()
     };
     int w = width(), h = height();
     int count = w * h / 200;
-    int penW = qMin(w, h) / 20;
+    int penW = qMin(w, h) / 15;
     for (int i = 0; i < count; i++)
     {
         lineStarts.append(QPointF(qrand() % w, qrand() % h));
@@ -223,7 +223,19 @@ bool CaptchaLabel::match(QString input)
     for (int i = 0; i < CAPTCHAR_COUNT; i++)
         captcha += charLabels[i]->text();
     // 进行比较
-    return input.toUpper() == captcha;
+    if (input.toUpper() == captcha)
+        return true;
+
+    // 记录失败
+    matchFailCount++;
+    if (matchFailCount >= autoRefreshMax  // 达到刷新的次数
+            || matchFailAndRefreshCount > 2) // 多次错误导致刷新
+    {
+        refresh();
+        matchFailAndRefreshCount++;
+        matchFailCount = 0;
+    }
+    return false;
 }
 
 void CaptchaLabel::paintEvent(QPaintEvent *)

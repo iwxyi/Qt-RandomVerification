@@ -46,6 +46,10 @@ private:
 
     int refreshProgress = 100;
     QList<QPoint> noisePoints2; // 新的位置
+
+    int autoRefreshMax = 2; // match错误几次后就自动刷新
+    int matchFailCount = 0; // match错误次数
+    int matchFailAndRefreshCount = 0; // 失败且导致刷新的次数，强行刷新
 };
 
 #endif // CAPTCHALABEL_H
