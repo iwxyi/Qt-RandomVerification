@@ -143,7 +143,7 @@ void CaptchaLabel::refresh()
         // 生成随机位置（排除边缘）
         int left = leftest + wid * i / CAPTCHAR_COUNT;
         int right = leftest + wid * (i+1) / CAPTCHAR_COUNT - label->width();
-        int x = qrand() % (right-left) + left;
+        int x = qrand() % qMax(right-left, 1) + left;
         int y = qrand() % qMax(hei - label->height(), 1) + topest;
         label->show(); // 之前是hide状态
         QPropertyAnimation * ani = new QPropertyAnimation(label, "pos");
